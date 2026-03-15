@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Market Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 20px;
+        }
+        h1 { text-align: center; margin-bottom: 8px; font-size: 1.5rem; }
+        .subtitle { text-align: center; color: #8b949e; margin-bottom: 24px; font-size: 0.9rem; }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 140px;
+        }
+        .stat-card .label { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 4px; }
+        .stat-card .value.ratio { color: #58a6ff; }
+        .stat-card .value.portfolio { color: #3fb950; }
+        .stat-card .value.positions { color: #d29922; }
+        .stat-card .value.cash { color: #8b949e; }
+        .chart-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-container h2 { font-size: 1rem; margin-bottom: 12px; color: #8b949e; }
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .period-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .period-btn.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: #fff;
+        }
+        .last-update { text-align: center; color: #484f58; font-size: 0.75rem; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Prediction Market Dashboard</h1>
+    <p class="subtitle">Capital Utilization Tracker</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="label">Utilization</div>
+            <div class="value ratio" id="current-ratio">--%</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Portfolio</div>
+            <div class="value portfolio" id="current-portfolio">$--</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">In Positions</div>
+            <div class="value positions" id="current-positions">$--</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Cash</div>
+            <div class="value cash" id="current-cash">$--</div>
+        </div>
+    </div>
+
+    <div class="period-selector">
+        <button class="period-btn" data-hours="24" onclick="setPeriod(24)">24h</button>
+        <button class="period-btn" data-hours="72" onclick="setPeriod(72)">3d</button>
+        <button class="period-btn active" data-hours="168" onclick="setPeriod(168)">7d</button>
+        <button class="period-btn" data-hours="720" onclick="setPeriod(720)">30d</button>
+        <button class="period-btn" data-hours="0" onclick="setPeriod(0)">All</button>
+    </div>
+
+    <div class="chart-container">
+        <h2>Capital Utilization (%)</h2>
+        <canvas id="ratioChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Portfolio Breakdown ($)</h2>
+        <canvas id="portfolioChart"></canvas>
+    </div>
+
+    <div class="last-update" id="last-update"></div>
+
+    <script>
+        let allData = [];
+        let ratioChart, portfolioChart;
+        let currentPeriodHours = 168;
+
+        const chartDefaults = {
+            responsive: true,
+            animation: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { labels: { color: '#8b949e' } },
+                tooltip: {
+                    backgroundColor: '#1c2128',
+                    borderColor: '#30363d',
+                    borderWidth: 1,
+                    titleColor: '#e6edf3',
+                    bodyColor: '#e6edf3',
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: { tooltipFormat: 'MMM d, HH:mm' },
+                    grid: { color: '#21262d' },
+                    ticks: { color: '#484f58', maxTicksLimit: 10 }
+                },
+                y: {
+                    grid: { color: '#21262d' },
+                    ticks: { color: '#484f58' }
+                }
+            }
+        };
+
+        async function loadData() {
+            const resp = await fetch('data/portfolio.json?t=' + Date.now());
+            allData = await resp.json();
+            if (allData.length === 0) return;
+
+            const latest = allData[allData.length - 1];
+            document.getElementById('current-ratio').textContent = latest.ratio.toFixed(1) + '%';
+            document.getElementById('current-portfolio').textContent = '$' + latest.total_portfolio.toLocaleString();
+            document.getElementById('current-positions').textContent = '$' + latest.total_positions.toLocaleString();
+            document.getElementById('current-cash').textContent = '$' + latest.cash.toLocaleString();
+            document.getElementById('last-update').textContent = 'Last update: ' + new Date(latest.timestamp).toLocaleString();
+
+            renderCharts();
+        }
+
+        function filterData(hours) {
+            if (hours === 0) return allData;
+            const cutoff = new Date(Date.now() - hours * 3600 * 1000);
+            return allData.filter(d => new Date(d.timestamp) >= cutoff);
+        }
+
+        function renderCharts() {
+            const data = filterData(currentPeriodHours);
+            const timestamps = data.map(d => new Date(d.timestamp));
+
+            if (ratioChart) ratioChart.destroy();
+            if (portfolioChart) portfolioChart.destroy();
+
+            ratioChart = new Chart(document.getElementById('ratioChart'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Utilization %',
+                        data: data.map(d => d.ratio),
+                        borderColor: '#58a6ff',
+                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: data.length > 200 ? 0 : 2,
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        ...chartDefaults.scales,
+                        y: { ...chartDefaults.scales.y, min: 0, max: 100 }
+                    }
+                }
+            });
+
+            portfolioChart = new Chart(document.getElementById('portfolioChart'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [
+                        {
+                            label: 'Portfolio',
+                            data: data.map(d => d.total_portfolio),
+                            borderColor: '#3fb950',
+                            tension: 0.3,
+                            pointRadius: data.length > 200 ? 0 : 2,
+                        },
+                        {
+                            label: 'Positions',
+                            data: data.map(d => d.total_positions),
+                            borderColor: '#d29922',
+                            backgroundColor: 'rgba(210, 153, 34, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: data.length > 200 ? 0 : 2,
+                        },
+                        {
+                            label: 'Cash',
+                            data: data.map(d => d.cash),
+                            borderColor: '#8b949e',
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointRadius: data.length > 200 ? 0 : 2,
+                        }
+                    ]
+                },
+                options: chartDefaults
+            });
+        }
+
+        function setPeriod(hours) {
+            currentPeriodHours = hours;
+            document.querySelectorAll('.period-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.hours) === hours);
+            });
+            renderCharts();
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
