@@ -2,17 +2,21 @@
 # Portfolio tracker — run via cron every 15 minutes
 # Collects data from Polymarket and pushes to GitHub
 
-set -e
+set -euo pipefail
 
-TRADE_DIR="$HOME/PythonProjects/PolyMarketTrade"
-DASHBOARD_DIR="$HOME/PythonProjects/prediction-dashboard"
+TRADE_DIR=~/PolyMarketTrade
+DASHBOARD_DIR=~/prediction-dashboard
 
+export DASHBOARD_REPO="$DASHBOARD_DIR"
+export GIT_SSH_COMMAND='ssh -i /root/.ssh/id_ed25519_bot -o IdentitiesOnly=yes'
+
+# Collect data
 cd "$TRADE_DIR"
-source .venv/bin/activate
-python track_portfolio.py
+.venv/bin/python track_portfolio.py
 
+# Commit & push
 cd "$DASHBOARD_DIR"
 git add data/portfolio.json
-git diff --cached --quiet && exit 0  # nothing changed — skip commit
+git diff --cached --quiet && exit 0
 git commit -m "data: $(date -u '+%Y-%m-%d %H:%M') UTC"
-git push
+git push origin main
