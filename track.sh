@@ -7,8 +7,8 @@ set -euo pipefail
 TRADE_DIR=~/PolyMarketTrade
 DASHBOARD_DIR=~/prediction-dashboard
 
+source ~/.bashrc
 export DASHBOARD_REPO="$DASHBOARD_DIR"
-# SSH key — uses default key of the current user
 
 # Collect data
 cd "$TRADE_DIR"
