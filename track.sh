@@ -8,7 +8,7 @@ TRADE_DIR=~/PolyMarketTrade
 DASHBOARD_DIR=~/prediction-dashboard
 
 export DASHBOARD_REPO="$DASHBOARD_DIR"
-export GIT_SSH_COMMAND='ssh -i /root/.ssh/id_ed25519_bot -o IdentitiesOnly=yes'
+# SSH key — uses default key of the current user
 
 # Collect data
 cd "$TRADE_DIR"
