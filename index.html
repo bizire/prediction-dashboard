@@ -78,6 +78,10 @@
             <div class="value ratio" id="current-ratio">--%</div>
         </div>
         <div class="stat-card">
+            <div class="label">Avg Utilization</div>
+            <div class="value ratio" id="avg-ratio">--%</div>
+        </div>
+        <div class="stat-card">
             <div class="label">Portfolio</div>
             <div class="value portfolio" id="current-portfolio">$--</div>
         </div>
@@ -168,6 +172,11 @@
         function renderCharts() {
             const data = filterData(currentPeriodHours);
             const timestamps = data.map(d => new Date(d.timestamp));
+
+            const avgRatio = data.length > 0
+                ? data.reduce((sum, d) => sum + d.ratio, 0) / data.length
+                : 0;
+            document.getElementById('avg-ratio').textContent = avgRatio.toFixed(1) + '%';
 
             if (ratioChart) ratioChart.destroy();
             if (portfolioChart) portfolioChart.destroy();
