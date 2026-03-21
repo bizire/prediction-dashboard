@@ -74,11 +74,11 @@
 
     <div class="stats">
         <div class="stat-card">
-            <div class="label">Utilization</div>
+            <div class="label">Ratio</div>
             <div class="value ratio" id="current-ratio">--%</div>
         </div>
         <div class="stat-card">
-            <div class="label">Avg Utilization</div>
+            <div class="label">Avg Ratio</div>
             <div class="value ratio" id="avg-ratio">--%</div>
         </div>
         <div class="stat-card">
@@ -104,7 +104,7 @@
     </div>
 
     <div class="chart-container">
-        <h2>Capital Utilization (%)</h2>
+        <h2>Capital Ratio (%)</h2>
         <canvas id="ratioChart"></canvas>
     </div>
 
@@ -186,7 +186,7 @@
                 data: {
                     labels: timestamps,
                     datasets: [{
-                        label: 'Utilization %',
+                        label: 'Ratio %',
                         data: data.map(d => d.ratio),
                         borderColor: '#58a6ff',
                         backgroundColor: 'rgba(88, 166, 255, 0.1)',
