@@ -78,7 +78,7 @@
             <div class="value ratio" id="current-ratio">--%</div>
         </div>
         <div class="stat-card">
-            <div class="label">Avg Ratio</div>
+            <div class="label" id="avg-ratio-label">7d Avg Ratio</div>
             <div class="value ratio" id="avg-ratio">--%</div>
         </div>
         <div class="stat-card">
@@ -177,6 +177,10 @@
                 ? data.reduce((sum, d) => sum + d.ratio, 0) / data.length
                 : 0;
             document.getElementById('avg-ratio').textContent = avgRatio.toFixed(1) + '%';
+
+            const periodLabels = { 24: '24h', 72: '3d', 168: '7d', 720: '30d', 0: 'All' };
+            const periodLabel = periodLabels[currentPeriodHours] || 'All';
+            document.getElementById('avg-ratio-label').textContent = periodLabel + ' Avg Ratio';
 
             if (ratioChart) ratioChart.destroy();
             if (portfolioChart) portfolioChart.destroy();
