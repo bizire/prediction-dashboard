@@ -155,8 +155,8 @@
 
             const latest = allData[allData.length - 1];
             document.getElementById('current-ratio').textContent = latest.ratio.toFixed(1) + '%';
-            document.getElementById('current-portfolio').textContent = '$' + latest.total_portfolio.toLocaleString();
-            document.getElementById('current-positions').textContent = '$' + latest.total_positions.toLocaleString();
+            document.getElementById('current-portfolio').textContent = '$' + Math.round(latest.total_portfolio).toLocaleString();
+            document.getElementById('current-positions').textContent = '$' + Math.round(latest.total_positions).toLocaleString();
             document.getElementById('current-cash').textContent = '$' + latest.cash.toLocaleString();
             document.getElementById('last-update').textContent = 'Last update: ' + new Date(latest.timestamp).toLocaleString();
 
