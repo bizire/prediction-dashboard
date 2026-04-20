@@ -23175,5 +23175,12 @@
     "total_positions": 11200.97,
     "cash": 26162.0,
     "ratio": 29.98
+  },
+  {
+    "timestamp": "2026-04-20T10:30:14+00:00",
+    "total_portfolio": 37363.89,
+    "total_positions": 10919.89,
+    "cash": 26444.0,
+    "ratio": 29.23
   }
 ]
