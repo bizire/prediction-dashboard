@@ -154,7 +154,7 @@
             if (allData.length === 0) return;
 
             const latest = allData[allData.length - 1];
-            document.getElementById('current-ratio').textContent = latest.ratio.toFixed(1) + '%';
+            document.getElementById('current-ratio').textContent = Math.round(latest.ratio) + '%';
             document.getElementById('current-portfolio').textContent = '$' + Math.round(latest.total_portfolio).toLocaleString();
             document.getElementById('current-positions').textContent = '$' + Math.round(latest.total_positions).toLocaleString();
             document.getElementById('current-cash').textContent = '$' + latest.cash.toLocaleString();
@@ -176,7 +176,7 @@
             const avgRatio = data.length > 0
                 ? data.reduce((sum, d) => sum + d.ratio, 0) / data.length
                 : 0;
-            document.getElementById('avg-ratio').textContent = avgRatio.toFixed(1) + '%';
+            document.getElementById('avg-ratio').textContent = Math.round(avgRatio) + '%';
 
             const periodLabels = { 24: '24h', 72: '3d', 168: '7d', 720: '30d', 0: 'All' };
             const periodLabel = periodLabels[currentPeriodHours] || 'All';
@@ -226,14 +226,6 @@
                             borderColor: '#d29922',
                             backgroundColor: 'rgba(210, 153, 34, 0.1)',
                             fill: true,
-                            tension: 0.3,
-                            pointRadius: data.length > 200 ? 0 : 2,
-                        },
-                        {
-                            label: 'Cash',
-                            data: data.map(d => d.cash),
-                            borderColor: '#8b949e',
-                            borderDash: [5, 5],
                             tension: 0.3,
                             pointRadius: data.length > 200 ? 0 : 2,
                         }
